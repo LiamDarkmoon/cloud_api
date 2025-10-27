@@ -1,5 +1,5 @@
 from supabase import create_client, Client
-from .config import config
+from config import config
 
 url = config.DB_URL
 key = config.DB_KEY

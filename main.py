@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from .routes import events, auth
+from routes import events, auth
 from datetime import datetime
 
 app = FastAPI()

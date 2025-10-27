@@ -1,9 +1,9 @@
 from typing import Annotated
 from fastapi import APIRouter, status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from ..database import db
-from ..models import User
-from ..utils import verify_password, create_access_token, get_user, hash_password
+from database import db
+from models import User
+from utils import verify_password, create_access_token, get_user, hash_password
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 

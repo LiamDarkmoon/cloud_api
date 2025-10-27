@@ -4,9 +4,9 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from typing import Annotated
 from jwt.exceptions import InvalidTokenError
-from .models import TokenData, UserData
-from .database import db
-from .config import config
+from models import TokenData, UserData
+from database import db
+from config import config
 from pwdlib import PasswordHash
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")

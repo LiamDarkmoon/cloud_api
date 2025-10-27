@@ -1,8 +1,8 @@
 from typing import List
 from fastapi import APIRouter, Depends, status, HTTPException
-from ..database import db
-from ..models import Event, EventData
-from ..utils import get_current_user
+from database import db
+from models import Event, EventData
+from utils import get_current_user
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
