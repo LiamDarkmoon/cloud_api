@@ -1,5 +1,5 @@
 (() => {
-  const API_URL = "http://127.0.0.1:8000/tracker.js"; // tu endpoint de FastAPI
+  const API_URL = "https://cloudapi-chi.vercel.app/events/track"; // tu endpoint de FastAPI
   const DOMAIN = window.location.hostname;
   const PATHNAME = window.location.pathname;
   const REFERRER = document.referrer || null;
@@ -31,7 +31,18 @@
     };
 
     // Si el usuario está logueado y tenés JWT almacenado
-    const token = localStorage.getItem("jwt_token");
+    let res = await fetch("https://cloudapi-chi.vercel.app/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: "liamdarkmoon@gmail.com",
+        password: "0okamisama",
+      }),
+    });
+    const resData = await res.json();
+    const token = resData.access_token;
 
     try {
       await fetch(API_URL, {
