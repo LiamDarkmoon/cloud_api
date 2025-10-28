@@ -3,10 +3,14 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from routes import events, auth
 from datetime import datetime
+from pathlib import Path
 
-app = FastAPI()
+app = FastAPI(
+    title="Cloudboard API",
+)
 
 timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+BASE_DIR = Path(__file__).resolve().parent
 
 origins = ["*"]
 
@@ -36,6 +40,5 @@ def welcome():
 async def get_tracker():
     """Serve the tracker file"""
     headers = {"Cache-Control": "public, max-age=86400"}
-    return FileResponse(
-        "src/static/tracker.js", media_type="application/javascript", headers=headers
-    )
+    file_path = BASE_DIR / "static" / "tracker.js"
+    return FileResponse(file_path, media_type="application/javascript", headers=headers)
