@@ -41,8 +41,8 @@
         password: "0okamisama",
       }),
     });
-    const resData = await res.json();
-    const token = resData.access_token;
+    const data = await res.json();
+    const token = data.access_token;
 
     try {
       await fetch(API_URL, {
