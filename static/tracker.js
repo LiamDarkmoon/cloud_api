@@ -23,8 +23,8 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: "liamdarkmoon@gmail.com",
-        password: "0okamisama",
+        username: "liamdarkmoon@gmail.com",
+        password: "0okamisama"
       }),
     });
     const data = res.json();
