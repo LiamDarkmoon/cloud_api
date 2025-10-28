@@ -14,6 +14,24 @@
     sessionStorage.setItem("tracker_session", sessionId);
   }
 
+  // Obtener JWT del localStorage o iniciar sesión para obtener uno nuevo
+  let token = localStorage.getItem("jwt_token");
+  if (!token) {
+    let res = fetch("https://cloudapi-chi.vercel.app/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: "liamdarkmoon@gmail.com",
+        password: "0okamisama",
+      }),
+    });
+    const data = res.json();
+    const token = data.access_token;
+    localStorage.setItem("jwt_token", token);
+  }
+
   // Envío genérico de eventos
   async function sendEvent(event, element, data = {}) {
     const payload = {
@@ -30,19 +48,7 @@
       ...data,
     };
 
-    // Si el usuario está logueado y tenés JWT almacenado
-    let res = await fetch("https://cloudapi-chi.vercel.app/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: "liamdarkmoon@gmail.com",
-        password: "0okamisama",
-      }),
-    });
-    const data = await res.json();
-    const token = data.access_token;
+    // Si el usuario está logueado y tenés JWT almacenado, lo incluís
 
     try {
       await fetch(API_URL, {
