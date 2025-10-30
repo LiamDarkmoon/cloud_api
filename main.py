@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from routes import events, auth
@@ -24,8 +24,16 @@ app.add_middleware(
 
 
 @app.options("/{full_path:path}")
-async def preflight_handler(full_path: str):
-    return JSONResponse(status_code=200)
+async def preflight_handler(request: Request, full_path: str):
+    return JSONResponse(
+        status_code=200,
+        content={"message": "CORS preflight OK"},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",
+            "Access-Control-Allow-Headers": "Authorization, Content-Type",
+        },
+    )
 
 
 app.include_router(events.router)
