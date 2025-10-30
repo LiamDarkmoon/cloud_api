@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from routes import events, auth
 from datetime import datetime
@@ -21,6 +21,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.options("/{full_path:path}")
+async def preflight_handler(full_path: str):
+    return JSONResponse(status_code=200)
+
 
 app.include_router(events.router)
 app.include_router(auth.router)

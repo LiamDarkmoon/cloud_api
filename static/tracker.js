@@ -15,21 +15,24 @@
   }
 
   // Obtener JWT del localStorage o iniciar sesión para obtener uno nuevo
-  let token = localStorage.getItem("jwt_token");
-  if (!token) {
-    let res = fetch("https://cloudapi-chi.vercel.app/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: "liamdarkmoon@gmail.com",
-        password: "0okamisama"
-      }),
-    });
-    const data = res.json();
-    const token = data.access_token;
-    localStorage.setItem("jwt_token", token);
+  async function getJwtToken() {
+    let token = localStorage.getItem("jwt_token");
+
+    if (!token) {
+      let res = await fetch("https://cloudapi-chi.vercel.app/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          username: "liamdarkmoon@gmail.com",
+          password: "0okamisama",
+        }),
+      });
+      const data = await res.json();
+      const token = data.access_token;
+      localStorage.setItem("jwt_token", token);
+    }
+
+    return token;
   }
 
   // Envío genérico de eventos
@@ -49,13 +52,14 @@
     };
 
     // Si el usuario está logueado y tenés JWT almacenado, lo incluís
+    const TOKEN = await getJwtToken();
 
     try {
       await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+          ...(TOKEN && { Authorization: `Bearer ${TOKEN}` }),
         },
         body: JSON.stringify(payload),
       });
