@@ -75,6 +75,14 @@
         },
         body: JSON.stringify(payload),
       });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Error response:", text);
+      } else {
+        const json = await res.json();
+        console.log("OK:", json);
+      }
     } catch (error) {
       console.error("Tracker error:", error);
     }
