@@ -23,7 +23,7 @@ app.add_middleware(
 )
 
 
-@app.options("/{full_path:path}")
+@app.options("/{full_path:path}", include_in_schema=False)
 async def preflight_handler(request: Request, full_path: str):
     return JSONResponse(
         status_code=200,
