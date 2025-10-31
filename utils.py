@@ -14,7 +14,7 @@ password_hash = PasswordHash.recommended()
 
 
 def hash_password(password: str) -> str:
-    """Hash a plaintext password."""
+    """Hash password plano"""
     return password_hash.hash(password)
 
 
@@ -53,14 +53,18 @@ def verify_token(token: str, credentials_exception):
             token,
             config.SECRET_KEY,
             algorithms=[config.ALGORITHM],
-            options={"verify_exp": False},
         )
         email = payload.get("email")
         if not email:
             raise credentials_exception
         token_data = TokenData(email=email)
-    except InvalidTokenError:
-        print("exception:", "XoX")
+
+    except jwt.ExpiredSignatureError:
+        print("Token expirado")
+        raise credentials_exception
+
+    except InvalidTokenError as e:
+        print("Token inválido:", str(e))
         raise credentials_exception
 
     return token_data

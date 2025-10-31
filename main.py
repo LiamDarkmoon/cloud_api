@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from routes import events, auth
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 app = FastAPI(
@@ -27,7 +28,7 @@ app.add_middleware(
 async def preflight_handler(request: Request, full_path: str):
     return JSONResponse(
         status_code=200,
-        content={"message": "CORS preflight OK"},
+        content={"message": f"CORS preflight on {full_path} OK"},
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",

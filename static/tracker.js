@@ -1,5 +1,5 @@
 (() => {
-  const API_URL = "https://cloudapi-chi.vercel.app/events/track"; // tu endpoint de FastAPI
+  const API_URL = "https://cloudapi-chi.vercel.app/events/track"; // track endpoint de la API
   const DOMAIN = window.location.hostname;
   const PATHNAME = window.location.pathname;
   const REFERRER = document.referrer || null;
@@ -16,27 +16,35 @@
 
   // Obtener JWT del localStorage o iniciar sesión para obtener uno nuevo
   async function getJwtToken() {
-    let token = localStorage.getItem("jwt_token");
+    let token = localStorage.getItem("jwt");
 
     if (!token) {
-      let res = await fetch("https://cloudapi-chi.vercel.app/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          username: "liamdarkmoon@gmail.com",
-          password: "0okamisama",
-        }),
-      });
+      let res = await fetch(
+        "https://cloudapi-chi.vercel.app/auth/login", // Iniciar sesión para obtener JWT
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            username: "liamdarkmoon@gmail.com", // Cambiar por credenciales reales
+            password: "0okamisama",
+          }),
+        }
+      );
       const data = await res.json();
       const token = data.access_token;
-      localStorage.setItem("jwt_token", token);
+      localStorage.setItem("jwt", token);
     }
 
     return token;
   }
 
-  // Envío genérico de eventos
+  // Envíar evento
   async function sendEvent(event, element, data = {}) {
+    const seconds = performance.now() / 1000;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    const formatted = `${minutes}m ${remainingSeconds}s`;
+
     const payload = {
       domain: DOMAIN,
       pathname: PATHNAME,
@@ -47,11 +55,11 @@
       session_id: sessionId,
       event_type: event,
       element: element,
-      time_spent: performance.now() / 1000, // segundos desde carga
+      time_spent: formatted, // minutos y segundos desde carga
       ...data,
     };
 
-    // Si el usuario está logueado y tenés JWT almacenado, lo incluís
+    // Usuar JWT almacenado
     const TOKEN = await getJwtToken();
 
     try {
@@ -63,14 +71,14 @@
         },
         body: JSON.stringify(payload),
       });
-    } catch (err) {
-      console.error("Tracker error:", err);
+    } catch (error) {
+      console.error("Tracker error:", error);
     }
   }
 
   // Evento: página cargada
   window.addEventListener("load", () => {
-    sendEvent("page_load", "body");
+    sendEvent("page_load", PATHNAME);
   });
 
   // Evento: clicks en botones o enlaces
@@ -84,6 +92,6 @@
 
   // Evento: salida o cierre
   window.addEventListener("beforeunload", () => {
-    sendEvent("exit", "window");
+    sendEvent("exit", PATHNAME);
   });
 })();
