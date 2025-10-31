@@ -1,4 +1,5 @@
 (() => {
+  console.log("Tracker initialized");
   const API_URL = "https://cloudapi-chi.vercel.app/events/track"; // track endpoint de la API
   const DOMAIN = window.location.hostname;
   const PATHNAME = window.location.pathname;
@@ -63,6 +64,9 @@
     const TOKEN = await getJwtToken();
 
     try {
+      console.log("token", TOKEN);
+      console.log("sending event:", payload);
+      console.log("to:", API_URL);
       await fetch(API_URL, {
         method: "POST",
         headers: {
