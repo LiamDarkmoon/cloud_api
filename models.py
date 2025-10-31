@@ -17,9 +17,15 @@ class Event(BaseModel):
 
 class EventData(BaseModel):
     id: int
-    page: str
-    element: str
+    domain: str
+    pathname: str
+    referrer: str | None
+    user_agent: str
+    screen_width: int
+    screen_height: int
+    session_id: str
     event_type: str
+    element: str
     time_spent: float
 
 
