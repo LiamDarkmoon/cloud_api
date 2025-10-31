@@ -67,7 +67,7 @@
       console.log("token", TOKEN);
       console.log("sending event:", payload);
       console.log("to:", API_URL);
-      await fetch(API_URL, {
+      const res = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
