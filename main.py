@@ -53,7 +53,7 @@ def welcome():
 
 @app.get("/tracker.js", response_class=FileResponse)
 async def get_tracker():
-    """Serve the tracker file"""
+    """Serve the tracker file to authoriced domains"""
     headers = {"Cache-Control": "public, max-age=86400"}
     file_path = BASE_DIR / "static" / "tracker.js"
     return FileResponse(file_path, media_type="application/javascript", headers=headers)

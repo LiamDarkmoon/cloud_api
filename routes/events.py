@@ -2,13 +2,13 @@ from typing import List
 from fastapi import APIRouter, Depends, status, HTTPException
 from database import db
 from models import Event, EventData
-from utils import get_current_user
+from utils import get_current_session
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
 
 @router.get("/", response_model=List[EventData])
-def get_events(user=Depends(get_current_user)):
+def get_events(user=Depends(get_current_session)):
 
     events = (db().table("events").select("*").execute()).data
 
@@ -21,7 +21,7 @@ def get_events(user=Depends(get_current_user)):
 
 
 @router.post("/track", status_code=status.HTTP_201_CREATED, response_model=EventData)
-def track_event(event: Event, user=Depends(get_current_user)):
+def track_event(event: Event, user=Depends(get_current_session)):
 
     event = (db().table("events").insert(event.model_dump()).execute()).data[0]
 
@@ -46,7 +46,7 @@ def get_last_event():
 
 
 @router.get("/event/{id}", response_model=EventData)
-def get_event(id: int, user=Depends(get_current_user)):
+def get_event(id: int, user=Depends(get_current_session)):
 
     responce = (db().table("events").select("*").eq("id", id).execute()).data
 
@@ -61,7 +61,7 @@ def get_event(id: int, user=Depends(get_current_user)):
 
 
 @router.delete("/event/latest", status_code=status.HTTP_204_NO_CONTENT)
-def delete_event(user=Depends(get_current_user)):
+def delete_event(user=Depends(get_current_session)):
 
     id = (
         db().table("events").select("id").order("id", desc=True).limit(1).execute()
@@ -76,7 +76,7 @@ def delete_event(user=Depends(get_current_user)):
 
 
 @router.delete("/event/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_event(id: int, user=Depends(get_current_user)):
+def delete_event(id: int, user=Depends(get_current_session)):
 
     responce = (db().table("events").delete().eq("id", id).execute()).data
 
