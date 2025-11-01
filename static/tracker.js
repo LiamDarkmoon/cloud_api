@@ -1,5 +1,6 @@
-(() => {
+(async () => {
   console.log("Tracker initialized");
+
   const API_URL = "https://cloudapi-chi.vercel.app/events/track"; // track endpoint de la API
   const DOMAIN = window.location.hostname;
   const PATHNAME = window.location.pathname;
@@ -15,36 +16,39 @@
     sessionStorage.setItem("tracker_session", sessionId);
   }
 
-  // Obtener JWT del localStorage o iniciar sesión para obtener uno nuevo
-  async function getJwtToken() {
-    let token = localStorage.getItem("jwt");
+  async function fetchToken(url) {
+    let res = await fetch(
+      url, // url de autenticación o registro
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: {
+          domain: JSON.stringify({ domain: DOMAIN }), // dominio a autenticar o registrar
+        },
+      }
+    );
+    const data = await res.json();
+    const token = data.domain_token;
+    if (token) sessionStorage.setItem("domainToken", token); // almacenar token en sessionStorage
+    return token;
+  }
+  // Obtener domainToken del sessionStorage o iniciar sesión para obtener uno nuevo
+  async function getDomainToken() {
+    const authUrl = "https://cloudapi-chi.vercel.app/auth/domain";
+
+    let token = sessionStorage.getItem("domainToken"); // obtener token almacenado
 
     if (!token) {
-      let res = await fetch(
-        "https://cloudapi-chi.vercel.app/auth/login", // Iniciar sesión para obtener JWT
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            username: "liamdarkmoon@gmail.com", // Cambiar por credenciales reales
-            password: "0okamisama",
-          }),
-        }
-      );
-      const data = await res.json();
-      const token = data.access_token;
-      localStorage.setItem("jwt", token);
+      token =
+        (await fetchToken(authUrl)) || (await fetchToken(authUrl + "/add"));
     }
 
     return token;
   }
 
-  // Envíar evento
-  async function sendEvent(event, element, data = {}) {
-    const seconds = performance.now() / 1000;
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    const formatted = `${minutes}m ${remainingSeconds}s`;
+  async function sendEvent(event, element, data = {}, useBeacon = false) {
+    const TOKEN =
+      sessionStorage.getItem("domainToken") || (await getDomainToken());
 
     const payload = {
       domain: DOMAIN,
@@ -56,17 +60,19 @@
       session_id: sessionId,
       event_type: event,
       element: element,
-      time_spent: formatted, // minutos y segundos desde carga
+      time_spent: performance.now() / 1000,
       ...data,
     };
 
-    // Usuar JWT almacenado
-    const TOKEN = await getJwtToken();
+    if (useBeacon && navigator.sendBeacon) {
+      const blob = new Blob([JSON.stringify(payload)], {
+        type: "application/json",
+      });
+      navigator.sendBeacon(API_URL, blob);
+      return;
+    }
 
     try {
-      console.log("token", TOKEN);
-      console.log("sending event:", payload);
-      console.log("to:", API_URL);
       const res = await fetch(API_URL, {
         method: "POST",
         headers: {
@@ -76,22 +82,15 @@
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Error response:", text);
-      } else {
-        const json = await res.json();
-        console.log("OK:", json);
-      }
+      if (!res.ok) console.error("Tracker error response:", await res.text());
+      else console.log("Tracker OK:", await res.json());
     } catch (error) {
       console.error("Tracker error:", error);
     }
   }
 
   // Evento: página cargada
-  window.addEventListener("load", () => {
-    sendEvent("page_load", PATHNAME);
-  });
+  window.addEventListener("load", () => sendEvent("page_load", PATHNAME));
 
   // Evento: clicks en botones o enlaces
   document.addEventListener("click", (e) => {
@@ -104,6 +103,6 @@
 
   // Evento: salida o cierre
   window.addEventListener("beforeunload", () => {
-    sendEvent("exit", PATHNAME);
+    sendEvent("exit", PATHNAME, {}, true);
   });
 })();

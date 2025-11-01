@@ -1,8 +1,8 @@
 from typing import Annotated
-from fastapi import APIRouter, status, HTTPException, Depends
+from fastapi import APIRouter, Body, status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from database import db
-from models import User
+from models import Domain, User
 from utils import verify_password, create_access_token, get_user, hash_password
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -26,9 +26,9 @@ async def register(credentials: Annotated[OAuth2PasswordRequestForm, Depends()])
         db().table("users").insert(new_user.model_dump(exclude={"id"})).execute()
     ).data[0]
 
-    access_token = create_access_token(data={"email": created_user["email"]})
+    user_token = create_access_token(data={"email": created_user["email"]})
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"user_token": user_token, "token_type": "user"}
 
 
 @router.post("/login", status_code=status.HTTP_201_CREATED)
@@ -49,6 +49,58 @@ async def login(credentials: Annotated[OAuth2PasswordRequestForm, Depends()]):
         )
 
     print(type(user.email))
-    access_token = create_access_token(data={"email": user.email})
+    user_token = create_access_token(data={"email": user.email}, token_type="user")
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"user_token": user_token, "token_type": "user"}
+
+
+@router.post("/domain", status_code=status.HTTP_201_CREATED)
+async def auth_domain(domain: str = Body()):
+
+    domain_query = await (
+        db().table("domains").select("*").eq("domain", domain).execute()
+    ).data
+
+    if not domain_query:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="unauthorized domain"
+        )
+    else:
+        domain_value = domain_query[0]["domain"]
+
+    domain_token = create_access_token(
+        data={"domain": domain_value}, token_type="domain"
+    )
+
+    return {"domain_token": domain_token, "token_type": "domain"}
+
+
+@router.post("/domain/add", status_code=status.HTTP_201_CREATED)
+async def add_domain(domain: str = Body()):
+
+    domain_query = await (
+        db().table("domains").select("*").eq("domain", domain).execute()
+    ).data
+
+    if not domain_query:
+        new_domain = Domain(
+            domain=domain,
+            is_active=True,
+        )
+
+        added_domain = (
+            db()
+            .table("domains")
+            .insert(new_domain.model_dump(exclude={"id"}))
+            .execute()
+        ).data[0]
+        domain_value = added_domain["domain"]
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="already added domain"
+        )
+    domain_token = create_access_token(
+        data={"domain": domain_value}, token_type="domain"
+    )
+
+    return {"domain_token": domain_token, "token_type": "domain"}

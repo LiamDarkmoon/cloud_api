@@ -1,3 +1,5 @@
+from datetime import datetime
+from typing import Literal, Optional
 from pydantic.v1 import BaseConfig as BaseConfig  # type: ignore[assignment]
 from pydantic import BaseModel, EmailStr
 
@@ -40,10 +42,27 @@ class UserData(BaseModel):
     password: str
 
 
+class Domain(BaseModel):
+    domain: str
+    is_active: bool = True
+    owner_id: int | None = None
+
+
+class DomainData(BaseModel):
+    id: int
+    domain: str
+    is_active: bool = True
+    owner_id: int | None = None
+    created_at: datetime
+    last_activity: datetime | None = None
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
 
 
 class TokenData(BaseModel):
-    email: str | None = None
+    type: Literal["user", "domain"]
+    email: Optional[str] = None
+    domain: Optional[str] = None

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from typing import Annotated
 from jwt.exceptions import InvalidTokenError
-from models import TokenData, UserData
+from models import DomainData, TokenData, UserData
 from database import db
 from config import config
 from pwdlib import PasswordHash
@@ -33,13 +33,13 @@ async def get_user(username: str):
     return UserData(**user[0])
 
 
-def create_access_token(data: dict):
+def create_access_token(data: dict, token_type: str = "user"):
 
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES
     )
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": token_type})
 
     encoded_jwt = jwt.encode(to_encode, config.SECRET_KEY, algorithm=config.ALGORITHM)
 
@@ -54,10 +54,16 @@ def verify_token(token: str, credentials_exception):
             config.SECRET_KEY,
             algorithms=[config.ALGORITHM],
         )
+
+        token_type = payload.get("type")
         email = payload.get("email")
-        if not email:
+        domain = payload.get("domain")
+
+        if token_type == "user" and not email:
             raise credentials_exception
-        token_data = TokenData(email=email)
+        if token_type == "domain" and not domain:
+            raise credentials_exception
+        token_data = TokenData(type=token_type, email=email, domain=domain)
 
     except jwt.ExpiredSignatureError:
         print("Token expirado")
@@ -70,8 +76,8 @@ def verify_token(token: str, credentials_exception):
     return token_data
 
 
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
-    """Get the current user based on the provided JWT token."""
+def get_current_session(token: Annotated[str, Depends(oauth2_scheme)]):
+    """Get the current session based on the provided token."""
 
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -81,11 +87,27 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
     token_data = verify_token(token, credentials_exception)
 
-    user = (
-        db().table("users").select("*").eq("email", token_data.email).execute()
-    ).data[0]
-
-    if user is None:
+    if not token_data.type:
         raise credentials_exception
 
-    return UserData(**user)
+    match token_data.type:
+        case "user":
+            user = (
+                db().table("users").select("*").eq("email", token_data.email).execute()
+            ).data
+            if not user:
+                raise credentials_exception
+            return {"session_type": "user", "data": UserData(**user[0])}
+        case "domain":
+            domain = (
+                db()
+                .table("domains")
+                .select("*")
+                .eq("domain", token_data.domain)
+                .execute()
+            ).data
+            if not domain:
+                raise credentials_exception
+            return {"session_type": "domain", "data": DomainData(**domain[0])}
+        case _:
+            raise credentials_exception
