@@ -40,11 +40,13 @@
     const authUrl = "https://cloudapi-chi.vercel.app/auth/domain";
 
     let token = sessionStorage.getItem("domainToken"); // obtener token almacenado
+    console.log(token);
 
     if (!token) {
       token =
         (await fetchToken(authUrl)) || (await fetchToken(authUrl + "/add"));
     }
+    console.log(sadasdasdasd);
 
     return token;
   }
