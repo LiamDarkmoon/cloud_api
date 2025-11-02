@@ -22,9 +22,7 @@
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: {
-          domain: JSON.stringify({ domain: DOMAIN }), // dominio a autenticar o registrar
-        },
+        body: JSON.stringify({ domain: DOMAIN }), // dominio a autenticar o registrar
       }
     );
     if (!res.ok) console.error("Tracker error response:", await res.text());
