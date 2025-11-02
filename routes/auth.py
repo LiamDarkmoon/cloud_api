@@ -55,7 +55,7 @@ async def login(credentials: Annotated[OAuth2PasswordRequestForm, Depends()]):
 
 
 @router.post("/domain", status_code=status.HTTP_201_CREATED)
-async def auth_domain(domain: str = Body()):
+async def auth_domain(domain: str = Body(..., embed=True)):
 
     domain_query = await (
         db().table("domains").select("*").eq("domain", domain).execute()
@@ -76,7 +76,7 @@ async def auth_domain(domain: str = Body()):
 
 
 @router.post("/domain/add", status_code=status.HTTP_201_CREATED)
-async def add_domain(domain: str = Body()):
+async def add_domain(domain: str = Body(..., embed=True)):
 
     domain_query = await (
         db().table("domains").select("*").eq("domain", domain).execute()
