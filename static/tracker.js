@@ -17,9 +17,6 @@
   }
 
   async function fetchToken(url) {
-    console.log("Fetching token");
-    console.log(url);
-    console.log(DOMAIN);
     let res = await fetch(
       url, // url de autenticación o registro
       {
@@ -30,6 +27,8 @@
         },
       }
     );
+    if (!res.ok) console.error("Tracker error response:", await res.text());
+
     const data = await res.json();
     const token = data.domain_token;
     if (token) sessionStorage.setItem("domainToken", token); // almacenar token en sessionStorage
@@ -40,13 +39,11 @@
     const authUrl = "https://cloudapi-chi.vercel.app/auth/domain";
 
     let token = sessionStorage.getItem("domainToken"); // obtener token almacenado
-    console.log(token);
 
     if (!token) {
       token =
         (await fetchToken(authUrl)) || (await fetchToken(authUrl + "/add"));
     }
-    console.log(sadasdasdasd);
 
     return token;
   }
