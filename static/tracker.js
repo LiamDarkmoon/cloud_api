@@ -17,6 +17,9 @@
   }
 
   async function fetchToken(url) {
+    console.log("Fetching token");
+    console.log(url);
+    console.log(DOMAIN);
     let res = await fetch(
       url, // url de autenticación o registro
       {
