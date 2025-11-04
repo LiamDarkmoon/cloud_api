@@ -39,11 +39,13 @@ def track_event(event: Event, session=Depends(get_current_session)):
             .where("owner_id", session["data"].id)
             .execute()
         ).data[0]
-        new_event = {
-            "domain_id": owned_domain.id,
-            "user_id": session["data"].id,
-        }
-        new_event.update(event.model_dump())
+        new_event = event.model_dump()
+        new_event.update(
+            {
+                "domain_id": owned_domain.id,
+                "user_id": session["data"].id,
+            }
+        )
 
     created_event = (db().table("events").insert(new_event).execute()).data[0]
 
