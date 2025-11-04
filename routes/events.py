@@ -21,11 +21,33 @@ def get_events(user=Depends(get_current_session)):
 
 
 @router.post("/track", status_code=status.HTTP_201_CREATED, response_model=EventData)
-def track_event(event: Event, user=Depends(get_current_session)):
+def track_event(event: Event, session=Depends(get_current_session)):
 
-    event = (db().table("events").insert(event.model_dump()).execute()).data[0]
+    if session["session_type"] == "domain":
+        new_event = event.model_dump()
+        new_event.update(
+            {
+                "domain_id": session["data"].id,
+                "user_id": session["data"].owner_id,
+            }
+        )
+    else:
+        owned_domain = (
+            db()
+            .table("domains")
+            .select("*")
+            .where("owner_id", session["data"].id)
+            .execute()
+        ).data[0]
+        new_event = {
+            "domain_id": owned_domain.id,
+            "user_id": session["data"].id,
+        }
+        new_event.update(event.model_dump())
 
-    return event
+    created_event = (db().table("events").insert(new_event).execute()).data[0]
+
+    return EventData(**created_event)
 
 
 @router.get("/event/latest", status_code=status.HTTP_202_ACCEPTED)

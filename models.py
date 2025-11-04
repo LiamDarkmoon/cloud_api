@@ -15,6 +15,8 @@ class Event(BaseModel):
     event_type: str
     element: str
     time_spent: float
+    user_id: Optional[int] = None
+    domain_id: Optional[int] = None
 
 
 class EventData(BaseModel):
@@ -29,6 +31,8 @@ class EventData(BaseModel):
     event_type: str
     element: str
     time_spent: float
+    user_id: int
+    domain_id: int
 
 
 class User(BaseModel):
