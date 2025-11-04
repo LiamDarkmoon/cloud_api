@@ -49,6 +49,7 @@
   async function sendEvent(event, element, data = {}, useBeacon = false) {
     const TOKEN =
       sessionStorage.getItem("domainToken") || (await getDomainToken());
+    console.log(TOKEN);
 
     const payload = {
       domain: DOMAIN,
