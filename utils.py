@@ -86,12 +86,14 @@ def get_current_session(token: Annotated[str, Depends(oauth2_scheme)]):
     )
 
     token_data = verify_token(token, credentials_exception)
+    print(token_data)
 
     if not token_data.type:
         raise credentials_exception
 
     match token_data.type:
         case "user":
+            print("Usuário", token_data.email)
             user = (
                 db().table("users").select("*").eq("email", token_data.email).execute()
             ).data
@@ -99,6 +101,7 @@ def get_current_session(token: Annotated[str, Depends(oauth2_scheme)]):
                 raise credentials_exception
             return {"session_type": "user", "data": UserData(**user[0])}
         case "domain":
+            print("Domínio", token_data.domain)
             domain = (
                 db()
                 .table("domains")
