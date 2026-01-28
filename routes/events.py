@@ -2,13 +2,13 @@ from typing import List
 from fastapi import APIRouter, Depends, status, HTTPException
 from database import db
 from models import Event, EventData
-from utils import get_current_session
+from utils import get_current_session, require_user_session
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
 
 @router.get("/", response_model=List[EventData])
-def get_events(user=Depends(get_current_session)):
+def get_events(user=Depends(require_user_session)):
 
     events = (db().table("events").select("*").execute()).data
 
@@ -21,7 +21,7 @@ def get_events(user=Depends(get_current_session)):
 
 
 @router.post("/track", status_code=status.HTTP_201_CREATED, response_model=EventData)
-def track_event(event: Event, session=Depends(get_current_session)):
+def track_event(event: Event, session=Depends(require_user_session)):
 
     if session["session_type"] == "domain":
         new_event = event.model_dump()
@@ -70,7 +70,7 @@ def get_last_event():
 
 
 @router.get("/event/{id}", response_model=EventData)
-def get_event(id: int, user=Depends(get_current_session)):
+def get_event(id: int, user=Depends(require_user_session)):
 
     responce = (db().table("events").select("*").eq("id", id).execute()).data
 
@@ -85,7 +85,7 @@ def get_event(id: int, user=Depends(get_current_session)):
 
 
 @router.delete("/event/latest", status_code=status.HTTP_204_NO_CONTENT)
-def delete_event(user=Depends(get_current_session)):
+def delete_event(user=Depends(require_user_session)):
 
     id = (
         db().table("events").select("id").order("id", desc=True).limit(1).execute()
@@ -100,7 +100,7 @@ def delete_event(user=Depends(get_current_session)):
 
 
 @router.delete("/event/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_event(id: int, user=Depends(get_current_session)):
+def delete_event(id: int, user=Depends(require_user_session)):
 
     responce = (db().table("events").delete().eq("id", id).execute()).data
 

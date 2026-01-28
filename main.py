@@ -1,9 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from routes import events, auth
+from routes import domains, events, auth, users
 from datetime import datetime
-from zoneinfo import ZoneInfo
 from pathlib import Path
 
 app = FastAPI(
@@ -39,6 +38,8 @@ async def preflight_handler(request: Request, full_path: str):
 
 app.include_router(events.router)
 app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(domains.router)
 
 
 @app.get("/")

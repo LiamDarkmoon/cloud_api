@@ -76,6 +76,47 @@ def verify_token(token: str, credentials_exception):
     return token_data
 
 
+def get_token_data(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenData:
+
+    print(token)
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    return verify_token(token, credentials_exception)
+
+
+def require_user_session(
+    token_data: TokenData = Depends(get_token_data),
+):
+    print(token_data)
+    if token_data.type != "user":
+        raise HTTPException(status_code=403, detail="User token required")
+
+    user = db().table("users").select("*").eq("email", token_data.email).execute().data
+    if not user:
+        raise HTTPException(status_code=401)
+
+    return UserData(**user[0])
+
+
+def require_domain_session(
+    token_data: TokenData = Depends(get_token_data),
+):
+    if token_data.type != "domain":
+        raise HTTPException(status_code=403, detail="Domain token required")
+
+    domain = (
+        db().table("domains").select("*").eq("domain", token_data.domain).execute().data
+    )
+    if not domain:
+        raise HTTPException(status_code=401)
+
+    return DomainData(**domain[0])
+
+
 def get_current_session(token: Annotated[str, Depends(oauth2_scheme)]):
     """Get the current session based on the provided token."""
 

@@ -28,7 +28,11 @@ async def register(credentials: Annotated[OAuth2PasswordRequestForm, Depends()])
 
     user_token = create_access_token(data={"email": created_user["email"]})
 
-    return {"user_token": user_token, "token_type": "user"}
+    return {
+        "user_token": user_token,
+        "user": created_user["email"],
+        "token_type": "user",
+    }
 
 
 @router.post("/login", status_code=status.HTTP_201_CREATED)
@@ -51,7 +55,7 @@ async def login(credentials: Annotated[OAuth2PasswordRequestForm, Depends()]):
     print(type(user.email))
     user_token = create_access_token(data={"email": user.email}, token_type="user")
 
-    return {"user_token": user_token, "token_type": "user"}
+    return {"user_token": user_token, "user": user.email, "token_type": "user"}
 
 
 @router.post("/domain", status_code=status.HTTP_201_CREATED)
