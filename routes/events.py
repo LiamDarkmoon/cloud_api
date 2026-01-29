@@ -22,7 +22,7 @@ def get_events(
             db()
             .table("events")
             .select("*")
-            .where("user_id", user_id)
+            .eq("user_id", user_id)
             .limit(limit)
             .offset(offset)
             .execute()
@@ -32,27 +32,18 @@ def get_events(
             db()
             .table("events")
             .select("*")
-            .where("domain_id", domain_id)
+            .eq("domain_id", domain_id)
             .limit(limit)
             .offset(offset)
             .execute()
         ).data
         events = domain_events
-    elif user.id:
+    else user.id:
         events = (
             db()
             .table("events")
             .select("*")
-            .where("user_id", user.id)
-            .limit(limit)
-            .offset(offset)
-            .execute()
-        ).data
-    else:
-        events = (
-            db()
-            .table("events")
-            .select("*")
+            .eq("user_id", user.id)
             .limit(limit)
             .offset(offset)
             .execute()
@@ -77,7 +68,7 @@ def track_event(event: Event, session=Depends(require_domain_session)):
             db()
             .table("domains")
             .select("*")
-            .where("owner_id", session["data"].id)
+            .eq("owner_id", session["data"].id)
             .execute()
         ).data[0]
         new_event = event.model_dump()
