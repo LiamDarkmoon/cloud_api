@@ -31,6 +31,7 @@ class EventData(BaseModel):
     event_type: str
     element: str
     time_spent: float
+    created_at: datetime
     user_id: int
     domain_id: int
 

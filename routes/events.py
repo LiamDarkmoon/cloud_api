@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends, status, HTTPException, Query
 from database import db
 from models import Event, EventData
-from utils import get_current_session, require_user_session
+from utils import get_current_session, require_domain_session, require_user_session
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
@@ -10,13 +10,43 @@ router = APIRouter(prefix="/events", tags=["Events"])
 @router.get("/", response_model=List[EventData])
 def get_events(
     user=Depends(require_user_session),
-    limit: int = Query(10, ge=1, le=100),
+    user_id: int | None = None,
+    domain_id: int | None = None,
+    limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ):
 
-    events = (
-        db().table("events").select("*").limit(limit).offset(offset).execute()
-    ).data
+    if user_id is not None:
+        events = (
+            db()
+            .table("events")
+            .select("*")
+            .where("user_id", user_id)
+            .limit(limit)
+            .offset(offset)
+            .execute()
+        ).data
+    elif domain_id is not None:
+        domain_events = (
+            db()
+            .table("events")
+            .select("*")
+            .where("domain_id", domain_id["data"].id)
+            .limit(limit)
+            .offset(offset)
+            .execute()
+        ).data
+        events = domain_events
+    else:
+        events = (
+            db()
+            .table("events")
+            .select("*")
+            .where("user_id", user.id)
+            .limit(limit)
+            .offset(offset)
+            .execute()
+        ).data
 
     if not events:
         raise HTTPException(

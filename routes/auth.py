@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Body, status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from database import db
-from models import Domain, User
+from models import Domain, User, UserData
 from utils import verify_password, create_access_token, get_user, hash_password
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -30,7 +30,7 @@ async def register(credentials: Annotated[OAuth2PasswordRequestForm, Depends()])
 
     return {
         "user_token": user_token,
-        "user": created_user["email"],
+        "user": UserData(**created_user).model_dump(exclude={"password"}),
         "token_type": "user",
     }
 
@@ -52,10 +52,13 @@ async def login(credentials: Annotated[OAuth2PasswordRequestForm, Depends()]):
             status_code=status.HTTP_403_FORBIDDEN, detail="invalid credentials"
         )
 
-    print(type(user.email))
     user_token = create_access_token(data={"email": user.email}, token_type="user")
 
-    return {"user_token": user_token, "user": user.email, "token_type": "user"}
+    return {
+        "user_token": user_token,
+        "user": user.model_dump(exclude={"password"}),
+        "token_type": "user",
+    }
 
 
 @router.post("/domain", status_code=status.HTTP_201_CREATED)

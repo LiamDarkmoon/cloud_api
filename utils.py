@@ -78,7 +78,6 @@ def verify_token(token: str, credentials_exception):
 
 def get_token_data(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenData:
 
-    print(token)
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -91,7 +90,7 @@ def get_token_data(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenData:
 def require_user_session(
     token_data: TokenData = Depends(get_token_data),
 ):
-    print(token_data)
+
     if token_data.type != "user":
         raise HTTPException(status_code=403, detail="User token required")
 
