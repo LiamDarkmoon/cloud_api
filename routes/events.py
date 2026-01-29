@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends, status, HTTPException, Query
 from database import db
 from models import Event, EventData
-from utils import get_current_session, require_domain_session, require_user_session
+from utils import require_domain_session, require_user_session
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
@@ -38,7 +38,7 @@ def get_events(
             .execute()
         ).data
         events = domain_events
-    else user.id:
+    else:
         events = (
             db()
             .table("events")
