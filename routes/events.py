@@ -15,6 +15,7 @@ def get_events(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ):
+    print(user)
 
     if user_id is not None:
         events = (
@@ -31,13 +32,13 @@ def get_events(
             db()
             .table("events")
             .select("*")
-            .where("domain_id", domain_id["data"].id)
+            .where("domain_id", domain_id)
             .limit(limit)
             .offset(offset)
             .execute()
         ).data
         events = domain_events
-    else:
+    elif user.id:
         events = (
             db()
             .table("events")
@@ -47,17 +48,21 @@ def get_events(
             .offset(offset)
             .execute()
         ).data
+    else:
+        events = (
+            db()
+            .table("events")
+            .select("*")
+            .limit(limit)
+            .offset(offset)
+            .execute()
+        ).data
 
-    if not events:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="no events found"
-        )
-
-    return events
+    return events or []
 
 
 @router.post("/track", status_code=status.HTTP_201_CREATED, response_model=EventData)
-def track_event(event: Event, session=Depends(require_user_session)):
+def track_event(event: Event, session=Depends(require_domain_session)):
 
     if session["session_type"] == "domain":
         new_event = event.model_dump()
