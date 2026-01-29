@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Query
 from database import db
 from models import Domain, UserData
 from utils import require_user_session
@@ -8,9 +8,11 @@ router = APIRouter(prefix="/domains", tags=["Domains"])
 
 
 @router.get("/", response_model=List[Domain])
-def get_domains():
+def get_domains(limit: int = Query(20, ge=1, le=100), offset: int = Query(0, ge=0)):
 
-    responce = (db().table("domains").select("*").execute()).data
+    responce = (
+        db().table("domains").select("*").limit(limit).offset(offset).execute()
+    ).data
 
     if not responce:
         raise HTTPException(

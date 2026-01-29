@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, Query, status, HTTPException
 from database import db
 from models import UserData
 from utils import require_user_session
@@ -8,9 +8,11 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.get("/", response_model=List[UserData])
-def get_user():
+def get_user(limit: int = Query(10, ge=1, le=100), offset: int = Query(0, ge=0)):
 
-    responce = (db().table("users").select("*").execute()).data
+    responce = (
+        db().table("users").select("*").limit(limit).offset(offset).execute()
+    ).data
 
     if not responce:
         raise HTTPException(
