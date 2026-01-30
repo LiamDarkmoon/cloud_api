@@ -15,80 +15,61 @@ def get_events(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ):
-    print(user)
+    req_id = user_id or user.id
+    event_query = db().table("events").select("*")
 
-    if user_id is not None:
-        events = (
+    if domain_id:
+        domain = (
             db()
-            .table("events")
-            .select("*")
-            .eq("user_id", user_id)
-            .limit(limit)
-            .offset(offset)
+            .table("domains")
+            .select("id, owner_id")
+            .eq("id", domain_id)
+            .single()
             .execute()
         ).data
-    elif domain_id is not None:
-        domain_events = (
-            db()
-            .table("events")
-            .select("*")
-            .eq("domain_id", domain_id)
-            .limit(limit)
-            .offset(offset)
-            .execute()
-        ).data
-        events = domain_events
+
+        if not domain or domain["owner_id"] != user.id:
+            raise HTTPException(403, "Not authorized")
+
+        event_query = event_query.eq("domain_id", domain_id)
+
+        if req_id == user_id:
+            event_query = event_query.eq("user_id", req_id)
+
     else:
-        events = (
-            db()
-            .table("events")
-            .select("*")
-            .eq("user_id", user.id)
-            .limit(limit)
-            .offset(offset)
-            .execute()
-        ).data
+        if req_id != user.id:
+            raise HTTPException(403, "Not authorized")
+
+        event_query = event_query.eq("user_id", req_id)
+
+    events = event_query.limit(limit).offset(offset).execute().data
 
     return events or []
 
 
 @router.post("/track", status_code=status.HTTP_201_CREATED, response_model=EventData)
-def track_event(event: Event, session=Depends(require_domain_session)):
+def track_event(event: Event, domain=Depends(require_domain_session)):
 
-    if session["session_type"] == "domain":
-        new_event = event.model_dump()
-        new_event.update(
-            {
-                "domain_id": session["data"].id,
-                "user_id": session["data"].owner_id,
-            }
-        )
-    else:
-        owned_domain = (
-            db()
-            .table("domains")
-            .select("*")
-            .eq("owner_id", session["data"].id)
-            .execute()
-        ).data[0]
-        new_event = event.model_dump()
-        new_event.update(
-            {
-                "domain_id": owned_domain.id,
-                "user_id": session["data"].id,
-            }
-        )
+    new_event = event.model_dump()
+    new_event.update(
+        {
+            "domain_id": domain.id,
+            "user_id": domain.owner_id,
+        }
+    )
 
     created_event = (db().table("events").insert(new_event).execute()).data[0]
 
-    return EventData(**created_event)
+    return created_event
 
 
-@router.get("/event/latest", status_code=status.HTTP_202_ACCEPTED)
+@router.get(
+    "/event/latest", status_code=status.HTTP_202_ACCEPTED, response_model=EventData
+)
 def get_last_event():
 
     responce = (
-        db().table("events").select("*").order("id", desc=True).limit(1).execute()
+        db().table("events").select("*").order("id", desc=True).single().execute()
     ).data
 
     if not responce:
@@ -96,7 +77,7 @@ def get_last_event():
             status_code=status.HTTP_404_NOT_FOUND, detail="event not found"
         )
     else:
-        event = responce[0]
+        event = responce
 
     return event
 
@@ -104,14 +85,14 @@ def get_last_event():
 @router.get("/event/{id}", response_model=EventData)
 def get_event(id: int, user=Depends(require_user_session)):
 
-    responce = (db().table("events").select("*").eq("id", id).execute()).data
+    responce = (db().table("events").select("*").eq("id", id).single().execute()).data
 
     if not responce:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="event not found"
         )
     else:
-        event = responce[0]
+        event = responce
 
     return event
 

@@ -12,7 +12,11 @@ app = FastAPI(
 timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 BASE_DIR = Path(__file__).resolve().parent
 
-origins = ["*"]
+origins = [
+    "http://localhost:4321",
+    "http://localhost:3000",
+    "https://cloudboard.vercel.app",
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,19 +25,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.options("/{full_path:path}", include_in_schema=False)
-async def preflight_handler(request: Request, full_path: str):
-    return JSONResponse(
-        status_code=200,
-        content={"message": f"CORS preflight on {full_path} OK"},
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",
-            "Access-Control-Allow-Headers": "Authorization, Content-Type",
-        },
-    )
 
 
 app.include_router(events.router)
