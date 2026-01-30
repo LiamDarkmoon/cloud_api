@@ -63,21 +63,24 @@ async def login(credentials: Annotated[OAuth2PasswordRequestForm, Depends()]):
 
 @router.post("/domain", status_code=status.HTTP_201_CREATED)
 async def auth_domain(domain: str = Body(..., embed=True)):
+    print(domain)
 
-    domain_query = db().table("domains").select("*").eq("domain", domain).execute().data
+    domain_query = (
+        db().table("domains").select("*").eq("domain", domain).single().execute().data
+    )
 
     if not domain_query:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="unauthorized domain"
         )
     else:
-        domain_value = domain_query[0]["domain"]
+        domain_value = domain_query["domain"]
 
     domain_token = create_access_token(
         data={"domain": domain_value}, token_type="domain"
     )
 
-    return {"domain_token": domain_token, "token_type": "domain"}
+    return {"domain_token": domain_token}
 
 
 @router.post("/domain/add", status_code=status.HTTP_201_CREATED)

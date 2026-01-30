@@ -1,0 +1,51 @@
+POST http://127.0.0.1:8000/events/track HTTP/1.1
+content-type: application/json
+
+headers: {
+  "Authorization": "bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkb21haW4iOiJsb2NhbGhvc3QiLCJleHAiOjE3Njk4MTYzNzksInR5cGUiOiJkb21haW4ifQ.JgsjPEe2mR2griWZxDTO4h32QOEjo4IuOJ89BCjdqKs"
+}
+
+body: {
+  "id": 0,
+  "domain": "string",
+  "pathname": "string",
+  "referrer": "string",
+  "user_agent": "string",
+  "screen_width": 0,
+  "screen_height": 0,
+  "session_id": "string",
+  "event_type": "string",
+  "element": "string",
+  "time_spent": 0,
+  "created_at": "2026-01-30T23:27:27.112Z",
+  "user_id": 0,
+  "domain_id": 0
+}
+
+curl -X 'POST' \
+  'http://127.0.0.1:8000/auth/domain' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "domain": "localhost"
+}'
+
+curl -X 'POST' \
+  'http://127.0.0.1:8000/events/track' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -H 'authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkb21haW4iOiJsb2NhbGhvc3QiLCJleHAiOjE3Njk4MTYzNzksInR5cGUiOiJkb21haW4ifQ.JgsjPEe2mR2griWZxDTO4h32QOEjo4IuOJ89BCjdqKs' \
+  -d '{
+  "domain": "string",
+  "pathname": "string",
+  "referrer": "string",
+  "user_agent": "string",
+  "screen_width": 0,
+  "screen_height": 0,
+  "session_id": "string",
+  "event_type": "string",
+  "element": "string",
+  "time_spent": 0,
+  "user_id": 0,
+  "domain_id": 0
+}'

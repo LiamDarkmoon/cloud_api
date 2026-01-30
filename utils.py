@@ -104,8 +104,7 @@ def require_user_session(
 def require_domain_session(
     token_data: TokenData = Depends(get_token_data),
 ):
-    if token_data.type != "domain":
-        raise HTTPException(status_code=403, detail="Domain token required")
+    print(token_data.domain)
 
     domain = (
         db().table("domains").select("*").eq("domain", token_data.domain).execute().data

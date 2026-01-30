@@ -64,7 +64,7 @@ class DomainData(BaseModel):
 
 class Token(BaseModel):
     access_token: str
-    token_type: str
+    token_type: Optional[str] = None
 
 
 class TokenData(BaseModel):

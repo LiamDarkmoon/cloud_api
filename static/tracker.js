@@ -1,5 +1,5 @@
 (async () => {
-  console.log("Tracker initialized");
+  console.log("Tracker ready and watching for events");
 
   const API_URL = "https://cloudapi-chi.vercel.app/events/track"; // track endpoint de la API
   const DOMAIN = window.location.hostname;
@@ -23,9 +23,9 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ domain: DOMAIN }), // dominio a autenticar o registrar
-      }
+      },
     );
-    if (!res.ok) console.error("Tracker error response:", await res.text());
+    if (!res.ok) console.error("Token error:", await res.text());
 
     const data = await res.json();
     const token = data.domain_token;
@@ -49,7 +49,6 @@
   async function sendEvent(event, element, data = {}, useBeacon = false) {
     const TOKEN =
       sessionStorage.getItem("domainToken") || (await getDomainToken());
-    console.log(TOKEN);
 
     const payload = {
       domain: DOMAIN,
@@ -83,8 +82,8 @@
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) console.error("Tracker error response:", await res.text());
-      else console.log("Tracker OK:", await res.json());
+      if (!res.ok) console.error("Tracking error:", await res.text());
+      else await res.json();
     } catch (error) {
       console.error("Tracker error:", error);
     }
