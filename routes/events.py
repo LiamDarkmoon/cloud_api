@@ -42,7 +42,13 @@ def get_events(
 
         event_query = event_query.eq("user_id", req_id)
 
-    events = event_query.limit(limit).offset(offset).execute().data
+    events = (
+        event_query.order("created_at", desc=True)
+        .limit(limit)
+        .offset(offset)
+        .execute()
+        .data
+    )
 
     return events or []
 
@@ -69,7 +75,13 @@ def track_event(event: Event, domain=Depends(require_domain_session)):
 def get_last_event():
 
     responce = (
-        db().table("events").select("*").order("id", desc=True).single().execute()
+        db()
+        .table("events")
+        .select("*")
+        .limit(1)
+        .order("id", desc=True)
+        .single()
+        .execute()
     ).data
 
     if not responce:
@@ -85,7 +97,9 @@ def get_last_event():
 @router.get("/event/{id}", response_model=EventData)
 def get_event(id: int, user=Depends(require_user_session)):
 
-    responce = (db().table("events").select("*").eq("id", id).single().execute()).data
+    responce = (
+        db().table("events").select("*").eq("id", id).limit(1).single().execute()
+    ).data
 
     if not responce:
         raise HTTPException(
