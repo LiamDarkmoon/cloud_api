@@ -15,7 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent
 origins = [
     "http://localhost:4321",
     "http://localhost:3000",
-    "https://cloudboard.vercel.app",
+    "https://cloudboard-api.vercel.app",
 ]
 
 app.add_middleware(
@@ -38,7 +38,7 @@ def welcome():
     """Server's up and running"""
     return {
         "message": "Cloudboard Server is running!",
-        "version": "1.0.0",
+        "version": "1.7.5",
         "started_at": timestamp,
     }
 
