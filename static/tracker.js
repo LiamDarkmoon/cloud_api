@@ -1,4 +1,7 @@
 (async () => {
+  const script = document.currentScript;
+  const ApiKey = script.getAttribute("data-api-key");
+
   console.log("Tracker ready and watching for events");
 
   const API_URL = "https://cloudapi-chi.vercel.app/events/track"; // track endpoint de la API
@@ -16,39 +19,8 @@
     sessionStorage.setItem("tracker_session", sessionId);
   }
 
-  async function fetchToken(url) {
-    let res = await fetch(
-      url, // url de autenticación o registro
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain: DOMAIN }), // dominio a autenticar o registrar
-      },
-    );
-    if (!res.ok) console.error("Token error:", await res.text());
-
-    const data = await res.json();
-    const token = data.domain_token;
-    if (token) sessionStorage.setItem("domainToken", token); // almacenar token en sessionStorage
-    return token;
-  }
-  // Obtener domainToken del sessionStorage o iniciar sesión para obtener uno nuevo
-  async function getDomainToken() {
-    const authUrl = "https://cloudapi-chi.vercel.app/auth/domain";
-
-    let token = sessionStorage.getItem("domainToken"); // obtener token almacenado
-
-    if (!token) {
-      token =
-        (await fetchToken(authUrl)) || (await fetchToken(authUrl + "/add"));
-    }
-
-    return token;
-  }
-
   async function sendEvent(event, element, data = {}, useBeacon = false) {
-    const TOKEN =
-      sessionStorage.getItem("domainToken") || (await getDomainToken());
+    const sessionEvents = [];
 
     const payload = {
       domain: DOMAIN,
@@ -77,7 +49,7 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(TOKEN && { Authorization: `Bearer ${TOKEN}` }),
+          Authorization: `Bearer ${ApiKey}`,
         },
         body: JSON.stringify(payload),
       });

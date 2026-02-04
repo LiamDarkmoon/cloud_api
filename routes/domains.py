@@ -8,10 +8,10 @@ router = APIRouter(prefix="/domains", tags=["Domains"])
 
 
 @router.get("/", response_model=List[Domain])
-def get_domains(limit: int = Query(20, ge=1, le=100), offset: int = Query(0, ge=0)):
+def get_domains():
 
     responce = (
-        db().table("domains").select("*").limit(limit).offset(offset).execute()
+        db().table("domains").select("*").execute()
     ).data
 
     if not responce:

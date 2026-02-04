@@ -47,10 +47,19 @@ class UserData(BaseModel):
     password: str
 
 
+class ApiKey(BaseModel):
+    domain: str
+    key_hash: str
+    revoked: bool = True
+    domain_id: int | None = None
+    last_used_at: datetime | None = None
+
+
 class Domain(BaseModel):
     domain: str
     is_active: bool = True
     owner_id: int | None = None
+    last_used_at: datetime | None = None
 
 
 class DomainData(BaseModel):
@@ -59,7 +68,7 @@ class DomainData(BaseModel):
     is_active: bool = True
     owner_id: int | None = None
     created_at: datetime
-    last_activity: datetime | None = None
+    last_used_at: datetime | None = None
 
 
 class Token(BaseModel):
@@ -67,7 +76,8 @@ class Token(BaseModel):
     token_type: Optional[str] = None
 
 
-class TokenData(BaseModel):
-    type: Literal["user", "domain"]
-    email: Optional[str] = None
-    domain: Optional[str] = None
+class RefreshToken(BaseModel):
+    user_id: int
+    token_hash: str
+    expires_at: datetime
+    revoked: bool = False

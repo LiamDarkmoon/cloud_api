@@ -1,8 +1,13 @@
 from typing import List
 from fastapi import APIRouter, Depends, status, HTTPException, Query
 from database import db
-from models import Event, EventData
-from utils import require_domain_session, require_user_session
+from models import Event, EventData, ApiKey
+from utils import (
+    get_domain,
+    require_domain_session,
+    require_user_session,
+    verify_api_key,
+)
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
@@ -54,13 +59,15 @@ def get_events(
 
 
 @router.post("/track", status_code=status.HTTP_201_CREATED, response_model=EventData)
-def track_event(event: Event, domain=Depends(require_domain_session)):
+def track_event(event: Event, api_key: ApiKey = Depends(verify_api_key)):
 
+    print(api_key)
+    owner = get_domain(api_key["domain"]).owner_id
     new_event = event.model_dump()
     new_event.update(
         {
-            "domain_id": domain.id,
-            "user_id": domain.owner_id,
+            "domain_id": api_key["domain_id"],
+            "user_id": owner.owner_id,
         }
     )
 
