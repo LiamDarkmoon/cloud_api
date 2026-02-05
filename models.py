@@ -15,6 +15,7 @@ class Event(BaseModel):
     event_type: str
     element: str
     time_spent: float
+    timestamp: datetime
     user_id: Optional[int] = None
     domain_id: Optional[int] = None
 
@@ -31,6 +32,7 @@ class EventData(BaseModel):
     event_type: str
     element: str
     time_spent: float
+    timestamp: datetime
     created_at: datetime
     user_id: int
     domain_id: int
@@ -81,3 +83,25 @@ class RefreshToken(BaseModel):
     token_hash: str
     expires_at: datetime
     revoked: bool = False
+
+
+class Session(BaseModel):
+    id: int
+    session_id: str
+    user_id: int
+    domain_id: int
+    start: datetime
+    end: datetime
+    duration: float
+    event_count: int
+    device: str
+    os: str
+    browser: str
+    country: Optional[str] | None = None
+    entry_path: str
+    exit_path: str
+
+
+class DateRange(BaseModel):
+    start: datetime
+    end: datetime

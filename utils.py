@@ -1,3 +1,5 @@
+from user_agents import parse
+from itertools import groupby
 from fastapi import Depends, HTTPException, status
 from fastapi.security import (
     OAuth2PasswordBearer,
@@ -7,9 +9,9 @@ from fastapi.security import (
 from datetime import datetime, timedelta, timezone
 import jwt
 import secrets
-from typing import Annotated, Optional
+from typing import Annotated, List, Optional
 from jwt.exceptions import InvalidTokenError
-from models import DomainData, RefreshToken, User, UserData
+from models import DomainData, Event, RefreshToken, Session, User, UserData
 from database import db
 from config import config
 from pwdlib import PasswordHash
@@ -55,6 +57,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def verify_api_key(credentials: HTTPAuthorizationCredentials = Depends(security)):
+
     api_key = credentials.credentials
     key_hash = hash_api_key(api_key)
 
@@ -220,3 +223,61 @@ def require_domain_session(
         raise HTTPException(status_code=401)
 
     return DomainData(**domain[0])
+
+
+""" Analytics block"""
+
+
+def parse_agent(user_agent: str):
+    ua = parse(user_agent)
+
+    device = "mobile" if ua.is_mobile else "tablet" if ua.is_tablet else "desktop"
+
+    os = ua.os.family
+    browser = ua.browser.family
+
+    return {"device": device, "os": os, "browser": browser}
+
+
+def sort_events_by_session(events: List[Event]):
+    events.sort(key=lambda e: e["session_id"])
+
+    sessions = {
+        session_id: list(group)
+        for session_id, group in groupby(events, key=lambda e: e["session_id"])
+    }
+
+    return sessions
+
+
+def sort_events_by_time(events: list[dict]):
+    return sorted(events, key=lambda e: e["timestamp"])
+
+
+def get_paths(events: list[dict]):
+    return [
+        e["pathname"]
+        for e in events
+        if e["event_type"] in ("page_load", "exit") and e.get("pathname")
+    ]
+
+
+def build_session(events: list[dict]):
+    start = events[0]["timestamp"]
+    end = events[-1]["timestamp"]
+
+    agent = parse_agent(events[0]["user_agent"])
+    paths = get_paths(events)
+
+    return {
+        "session_id": events[0]["session_id"],
+        "start": start,
+        "end": end,
+        "duration": (end - start).total_seconds(),
+        "event_count": len(events),
+        "device": agent["device"],
+        "os": agent["os"],
+        "browser": agent["browser"],
+        "entry_path": paths[0] if paths else None,
+        "exit_path": paths[-1] if paths else None,
+    }

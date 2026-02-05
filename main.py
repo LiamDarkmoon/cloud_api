@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from routes import domains, events, auth, users
+from routes import domains, events, auth, users, analytics
 from datetime import datetime
 from pathlib import Path
 
@@ -31,6 +31,7 @@ app.include_router(events.router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(domains.router)
+app.include_router(analytics.router)
 
 
 @app.get("/")

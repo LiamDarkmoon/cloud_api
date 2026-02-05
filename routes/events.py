@@ -1,3 +1,4 @@
+import datetime
 from typing import List
 from fastapi import APIRouter, Depends, status, HTTPException, Query
 from database import db
@@ -58,22 +59,37 @@ def get_events(
     return events or []
 
 
-@router.post("/track", status_code=status.HTTP_201_CREATED, response_model=EventData)
-def track_event(event: Event, api_key: ApiKey = Depends(verify_api_key)):
+@router.post("/track", status_code=status.HTTP_201_CREATED)
+def track_event(events: List[Event], api_key: ApiKey = Depends(verify_api_key)):
 
-    print(api_key)
-    owner = get_domain(api_key["domain"]).owner_id
-    new_event = event.model_dump()
-    new_event.update(
-        {
-            "domain_id": api_key["domain_id"],
-            "user_id": owner.owner_id,
-        }
-    )
+    if api_key["revoked"]:
+        raise HTTPException(403, "revoked API key please renew")
 
-    created_event = (db().table("events").insert(new_event).execute()).data[0]
+    owner = get_domain(api_key["domain"])
+    if not owner:
+        raise HTTPException(404, "Domain not found")
+    if not owner["is_active"]:
+        raise HTTPException(403, "Domain is not active")
 
-    return created_event
+    if len(events) < 1:
+        raise HTTPException(400, "no events found to track")
+    if len(events) > 50:
+        raise HTTPException(400, "events exeded")
+
+    rows = []
+    for event in events:
+        new_event = event.model_dump()
+        new_event.update(
+            {
+                "domain_id": api_key["domain_id"],
+                "user_id": owner["owner_id"],
+            }
+        )
+        rows.append(new_event)
+
+    db().table("events").insert(rows).execute()
+
+    return {"status": "ok", "inserted": len(events)}
 
 
 @router.get(

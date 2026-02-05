@@ -171,6 +171,40 @@ async def get_api_key(domain: str = Body(..., embed=True)):
     if not key_domain:
         raise HTTPException(status_code=404, detail="domain not found")
 
+    if not key_domain.is_active:
+        raise HTTPException(status_code=403, detail="domain is not active")
+
+    key_data = ApiKey(
+        **{
+            "domain_id": key_domain.id,
+            "domain": domain,
+            "key_hash": hashed_key,
+        }
+    ).model_dump()
+
+    store_new_key = (db().table("api_keys").insert(key_data).execute()).data[0]
+
+    if not store_new_key:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="API key already exists"
+        )
+
+    return {"API-KEY": new_api_key}
+
+
+@router.post("/new/API-key", status_code=status.HTTP_201_CREATED)
+async def get_api_key(domain: str = Body(..., embed=True)):
+    new_api_key = generate_api_key(domain)
+    hashed_key = hash_api_key(new_api_key)
+
+    key_domain = get_domain(domain)
+
+    if not key_domain:
+        raise HTTPException(status_code=404, detail="domain not found")
+
+    if not key_domain.is_active:
+        raise HTTPException(status_code=403, detail="domain is not active")
+
     key_data = ApiKey(
         **{
             "domain_id": key_domain.id,
