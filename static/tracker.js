@@ -1,6 +1,7 @@
 (async () => {
   const script = document.currentScript;
   const ApiKey = script.getAttribute("data-api-key");
+  console.log("ApiKey:", ApiKey);
 
   console.log("Tracker ready and watching for events");
 
