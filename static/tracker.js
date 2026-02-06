@@ -8,7 +8,7 @@
 
   console.log("Tracker ready and watching for events");
 
-  const API_URL = "https://cloudapi-chi.vercel.app/events/track"; // track endpoint de la API
+  const API_URL = "https://api-cloudboard.vercel.app/events/track"; // track endpoint de la API
   const DOMAIN = window.location.hostname;
   const PATHNAME = window.location.pathname;
   const REFERRER = document.referrer || null;
