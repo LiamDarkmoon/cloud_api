@@ -1,4 +1,3 @@
-from turtle import update
 from typing import Annotated
 from fastapi import APIRouter, Body, Request, Response, status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
