@@ -46,9 +46,7 @@ async def register(credentials: Annotated[OAuth2PasswordRequestForm, Depends()])
     user_token = create_access_token(data={"email": created_user["email"]})
 
     return {
-        "user_token": user_token,
-        "user": UserData(**created_user).model_dump(exclude={"password"}),
-        "token_type": "user",
+        "token": user_token,
     }
 
 
