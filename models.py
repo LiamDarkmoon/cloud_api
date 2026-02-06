@@ -86,9 +86,8 @@ class RefreshToken(BaseModel):
 
 
 class Session(BaseModel):
-    id: int
     session_id: str
-    user_id: int
+    user_id: int | None = None
     domain_id: int
     start: datetime
     end: datetime

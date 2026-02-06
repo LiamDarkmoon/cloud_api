@@ -2,11 +2,10 @@ from datetime import datetime
 from typing import List
 from fastapi import APIRouter, Depends, Query, status, HTTPException
 from database import db
-from models import DateRange, DomainData, Session, UserData
+from models import DomainData, Session
 from utils import (
     build_session,
     get_domain,
-    parse_db_datetime,
     require_user_session,
     sort_events_by_session,
     sort_events_by_time,
@@ -15,10 +14,26 @@ from utils import (
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 
-@router.get("/session", response_model=List[Session])
-def get_session(
-    start: datetime, end: datetime, domain: DomainData = Depends(get_domain)
+@router.get("/sessions", response_model=List[Session])
+def get_sessions(
+    user=Depends(require_user_session),
+    domain: DomainData = Depends(get_domain),
+    start: datetime = Query(...),
+    end: datetime = Query(...),
 ):
+
+    existing = (
+        db()
+        .table("sessions")
+        .select("*")
+        .eq("domain_id", domain.id)
+        .gte("start", start)
+        .lte("end", end)
+        .execute()
+    ).data
+
+    if existing:
+        return existing
 
     events = (
         db()
@@ -42,19 +57,19 @@ def get_session(
         sorted_by_time = sort_events_by_time(session_events)
         new_sessions.append(build_session(sorted_by_time))
 
-    existing = (
-        db()
-        .table("sessions")
-        .select("id")
-        .eq("domain_id", domain.domain_id)
-        .gte("start", start)
-        .lte("end", end)
-        .execute()
-    ).data
-
-    if existing:
-        raise HTTPException(409, "Sessions already recorded for this range")
-
     recorded_sessions = db().table("sessions").insert(new_sessions).execute()
 
     return new_sessions
+
+
+@router.get("/session{session_id}", response_model=List[Session])
+def get_session(session_id: str, user=Depends(require_user_session)):
+
+    session = (
+        db().table("sessions").select("*").eq("session_id", session_id).execute()
+    ).data
+
+    if not session:
+        raise HTTPException(404, "session not found")
+
+    return session

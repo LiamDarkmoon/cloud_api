@@ -27,7 +27,7 @@ def refresh_expire_time():
 
 
 def parse_db_datetime(value: str) -> datetime:
-    dt = datetime.fromisoformat(value)
+    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return dt
@@ -265,15 +265,17 @@ def get_paths(events: list[dict]):
 def build_session(events: list[dict]):
     start = events[0]["timestamp"]
     end = events[-1]["timestamp"]
+    duration = (parse_db_datetime(end) - parse_db_datetime(start)).total_seconds()
 
     agent = parse_agent(events[0]["user_agent"])
     paths = get_paths(events)
 
     return {
+        "domain_id": events[0]["domain_id"],
         "session_id": events[0]["session_id"],
         "start": start,
         "end": end,
-        "duration": (end - start).total_seconds(),
+        "duration": duration,
         "event_count": len(events),
         "device": agent["device"],
         "os": agent["os"],
